@@ -1,0 +1,61 @@
+---
+title: "Designing a Multi-Tenant Auth Layer That Doesn't Fight You"
+date: "2026-05-20"
+excerpt: "Notes from building session-based auth with MFA, OAuth2, and RBAC for a multi-tenant platform — and the trade-offs that actually mattered."
+tags: ["Architecture", "Security", "Auth"]
+---
+
+Multi-tenant auth is one of those problems that looks simple in a diagram and gets
+complicated the moment real customers show up. Here's how I think about it after
+shipping a platform where every tenant expects strict isolation, SSO, and granular
+permissions — all at once.
+
+## Start from the tenant boundary
+
+Before touching tokens or sessions, get the **tenant boundary** right. Every request
+must resolve to exactly one tenant, and every data access must be scoped to it. I treat
+the tenant id as a first-class part of identity, not an afterthought bolted onto the
+user record.
+
+- Resolve the tenant early (subdomain, header, or token claim).
+- Scope **every** query by tenant id — enforce it at the data layer, not in handlers.
+- Make cross-tenant access impossible by construction, not by code review.
+
+## Sessions vs. tokens
+
+I went with **server-side sessions** backed by a fast store, with short-lived access
+context derived per request. Stateless JWTs are tempting, but revocation and "log out
+everywhere" are first-class requirements in B2B, and sessions make those trivial.
+
+> Choose the boring option that lets you revoke instantly. Your security team will thank you.
+
+## Layering MFA and OAuth2
+
+MFA and SSO aren't competing features — they're layers:
+
+1. **OAuth2 / OIDC** handles _who you are_ via the tenant's identity provider.
+2. **MFA** adds a second factor when the tenant's policy requires it.
+3. **RBAC** decides _what you can do_ once identity is established.
+
+Keeping these concerns separate meant I could let one tenant enforce SSO-only while
+another used password + TOTP, without branching the core flow.
+
+## RBAC that scales with the org
+
+Roles map to permissions; permissions gate actions. The trick is resisting the urge to
+hardcode role checks in the UI. Instead, ship a single `can(user, action, resource)`
+function and call it everywhere — server and client.
+
+```ts
+if (!can(user, "billing:write", tenant)) {
+  throw new ForbiddenError();
+}
+```
+
+## Takeaways
+
+- Tenant isolation is an architecture decision, not a middleware.
+- Sessions buy you revocation; don't trade that away cheaply.
+- Keep identity, MFA, and authorization as independent layers.
+
+Build it so the secure path is the easy path, and the rest mostly takes care of itself.
