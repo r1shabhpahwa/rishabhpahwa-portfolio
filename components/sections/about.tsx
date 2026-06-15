@@ -2,9 +2,9 @@ import { Reveal } from "@/components/motion/reveal";
 import { site } from "@/data/site";
 
 const stats = [
-  { value: "4+", label: "Years building" },
+  { value: "5+", label: "Years building" },
   { value: "Full-stack", label: "Front to back" },
-  { value: "M.Sc.", label: "Computer Science" },
+  { value: "Master's", label: "Applied Computing" },
 ];
 
 export function About() {

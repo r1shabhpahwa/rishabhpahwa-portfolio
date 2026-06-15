@@ -6,7 +6,7 @@ export function Experience() {
   return (
     <section id="experience" className="scroll-mt-24 px-6 py-24 sm:py-32">
       <div className="mx-auto max-w-3xl">
-        <SectionHeading eyebrow="Career" title="Where I've worked" />
+        <SectionHeading eyebrow="Background" title="Experience & education" />
 
         <div className="relative mt-14">
           {/* timeline spine */}
@@ -30,13 +30,15 @@ export function Experience() {
                   <span className="font-mono text-xs text-muted">{job.period}</span>
                 </div>
                 {job.summary && <p className="mt-1 text-sm text-accent-2">{job.summary}</p>}
-                <ul className="mt-3 space-y-1.5">
-                  {job.bullets.map((b) => (
-                    <li key={b} className="text-sm leading-relaxed text-muted">
-                      {b}
-                    </li>
-                  ))}
-                </ul>
+                {job.bullets.length > 0 && (
+                  <ul className="mt-3 space-y-1.5">
+                    {job.bullets.map((b) => (
+                      <li key={b} className="text-sm leading-relaxed text-muted">
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </Reveal>
             ))}
           </div>
